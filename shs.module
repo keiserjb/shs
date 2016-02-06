@@ -698,7 +698,6 @@ function shs_field_formatter_prepare_view($entity_type, $entities, $field, $inst
  * Implements hook_field_formatter_view().
  */
 function shs_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $field_column = key($field['columns']);
   $elements = array();
   $settings = $display['settings'];
 
@@ -709,7 +708,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
   switch ($display['type']) {
     case 'shs_default':
       foreach ($items as $delta => $item) {
-        if (empty($item[$field_column])) {
+        if (empty($item['term'])) {
           continue;
         }
         $list_items = array();
