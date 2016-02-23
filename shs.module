@@ -829,7 +829,10 @@ function shs_term_get_children($identifier, $parent = 0, $settings = array(), $r
 
       foreach ($vocabularies as $name => $vid) {
         // Get term children (only first level).
-        $tree = taxonomy_get_tree($vid, $parent, 1, TRUE);
+        // Only load entities if i18n_taxonomy or entity_translation is
+        // installed.
+        $load_entities = module_exists('i18n_taxonomy') || module_exists('entity_translation');
+        $tree = taxonomy_get_tree($vid, $parent, 1, $load_entities);
         foreach ($tree as $term) {
           $term_name = $term->name;
           if (module_exists('i18n_taxonomy')) {
@@ -900,12 +903,31 @@ function shs_json_term_get_children($vid, $parent = array(), $settings = array()
       $result[] = array(
         'tid' => $tid,
         'label' => $label,
-        'has_children' => taxonomy_get_children($tid, $vid) ? TRUE : FALSE,
+        'has_children' => shs_term_has_children($tid, $vid),
       );
     }
   }
 
   return $result;
+}
+
+/**
+ * Check if a term has any children.
+ *
+ * Copied from taxonomy_get_children() but just checks existence instead of
+ * loading terms.
+ */
+function shs_term_has_children($tid, $vid) {
+  $query = db_select('taxonomy_term_data', 't');
+  $query->addExpression(1);
+  $query->join('taxonomy_term_hierarchy', 'h', 'h.tid = t.tid');
+  $query->condition('h.parent', $tid);
+  if ($vid) {
+    $query->condition('t.vid', $vid);
+  }
+  $query->range(0, 1);
+
+  return (bool) $query->execute()->fetchField();
 }
 
 /**
