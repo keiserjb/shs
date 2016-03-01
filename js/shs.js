@@ -172,6 +172,9 @@
           });
           // Set default value.
           $element.val(default_value);
+          if (0 === default_value) {
+            $element.val(settings.any_value);
+          }
 
           // Try to convert the element to a "Chosen" element.
           if (!elementConvertToChosen($element, settings)) {
