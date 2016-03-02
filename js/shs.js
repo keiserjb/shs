@@ -182,6 +182,9 @@
             $element.fadeIn(settings.display.animationSpeed);
             $element.css('display','inline-block');
           }
+          else {
+            $element.trigger('chosen:updated');
+          }
 
           // If there is no data, the field is required and the user is allowed
           // to add new terms, trigger click on "Add new".
@@ -299,17 +302,16 @@
       if (Drupal.settings.chosen) {
         // Remove element created by chosen.
         var elem_id = $(this).attr('id');
-        $element_chzn = $('#' + elem_id.replace(/-/g, '_') + '_chzn');
-        if ($element_chzn) {
-          $element_chzn.prev('label').remove();
-          $element_chzn.remove();
+        $element_chosen = $('#' + elem_id.replace(/-/g, '_') + '_chosen');
+        if ($element_chosen) {
+          $element_chosen.prev('label').remove();
+          $element_chosen.remove();
         }
       }
       // Remove element.
       $(this).prev('label').remove();
       $(this).remove();
     });
-    //$triggering_element.nextAll('.chzn-container').remove();
     $triggering_element.nextAll('.shs-term-add-new-wrapper').remove();
     // Create next level (if the value is != 0).
     if ($triggering_element.val() == '_add_new_') {
@@ -318,7 +320,7 @@
       if (Drupal.settings.chosen) {
         // Remove element created by chosen.
         var elem_id = $triggering_element.attr('id');
-        $('#' + elem_id.replace(/-/g, '_') + '_chzn').remove();
+        $('#' + elem_id.replace(/-/g, '_') + '_chosen').remove();
       }
       // Create new container with textfield and buttons ("cancel", "save").
       $container = $('<div>')
@@ -423,30 +425,18 @@
    */
   shsElementCreate = function(base_id, settings, level) {
     // Create element and initially hide it.
+    $element = $('<select>')
+      .attr('id', base_id + '-select-' + level)
+      .addClass('shs-select')
+      // Add core class to apply default styles to the element.
+      .addClass('form-select')
+      .addClass('shs-select-level-' + level)
+      .bind('change', function() {
+        updateElements($(this), base_id, settings, level);
+      })
+      .hide();
     if (settings.multiple) {
-      $element = $('<select>')
-        .attr('id', base_id + '-select-' + level)
-        .attr('multiple', 'multiple')
-        .addClass('shs-select')
-        // Add core class to apply default styles to the element.
-        .addClass('form-select')
-        .addClass('shs-select-level-' + level)
-        .bind('change', function() {
-          updateElements($(this), base_id, settings, level);
-        })
-        .hide();
-    }
-    else {
-      $element = $('<select>')
-        .attr('id', base_id + '-select-' + level)
-        .addClass('shs-select')
-        // Add core class to apply default styles to the element.
-        .addClass('form-select')
-        .addClass('shs-select-level-' + level)
-        .bind('change', function() {
-          updateElements($(this), base_id, settings, level);
-        })
-        .hide();
+      $element.attr('multiple', 'multiple')
     }
     if (settings.settings.hasOwnProperty('required') && settings.settings.required) {
       $element.addClass('required');
@@ -554,33 +544,47 @@
    * @see http://drupal.org/project/chosen
    */
   elementConvertToChosen = function($element, settings) {
-    if (Drupal.settings.chosen) {
-      $element.removeClass('chzn-done');
-      var minWidth = Drupal.settings.chosen.minimum_width;
-      // Define options for chosen.
-      var options = {};
-      options.search_contains = Drupal.settings.chosen.search_contains;
-      options.placeholder_text_multiple = Drupal.settings.chosen.placeholder_text_multiple;
-      options.placeholder_text_single = Drupal.settings.chosen.placeholder_text_single;
-      options.no_results_text = Drupal.settings.chosen.no_results_text;
-      options.width = ($element.width() < minWidth) ? minWidth : $element.width();
-      options.width = options.width + 'px';
-
-      // Get element selector from settings (and remove "visible" option since
-      // our select element is hidden by default).
-      var selector = Drupal.settings.chosen.selector.replace(/:visible/, '');
-
-      if ((settings.settings.use_chosen === 'always') || ((settings.settings.use_chosen === 'chosen') && ($element.is(selector) && $element.find('option').size() >= Drupal.settings.chosen.minimum))) {
-        $element.css({
-          width : ($element.width() < minWidth) ? minWidth : $element.width()
-        }).chosen(options);
-        return true;
-      }
-      else if ((settings.settings.use_chosen === 'never') && (!$element.hasClass('chosen-disable'))) {
-        // Tell chosen to not process this element.
-        $element.addClass('chosen-disable');
-      }
+    // Returns false if chosen is not available or its settings are undefined.
+    if ($.fn.chosen === void 0 || !Drupal.settings.hasOwnProperty('chosen') || Drupal.settings.chosen === void 0) {
+      return false;
     }
+
+    var name = $element.attr('name');
+    settings.chosen = settings.chosen || Drupal.settings.chosen;
+    var minWidth = settings.chosen.minimum_width;
+    var multiple = Drupal.settings.chosen.multiple;
+    var maxSelectedOptions = Drupal.settings.chosen.max_selected_options;
+
+    // Define options.
+    var options = {
+      inherit_select_classes: true
+    };
+
+    var minimum = multiple && multiple[name] ? settings.chosen.minimum_multiple : settings.chosen.minimum_single;
+
+    if (maxSelectedOptions && maxSelectedOptions[name]) {
+      options.max_selected_options = maxSelectedOptions[name];
+    }
+
+    // Merges the user defined settings for chosen.
+    options = $.extend(options, settings.chosen);
+
+    // Get element selector from settings (and remove "visible" option since
+    // our select element is hidden by default).
+    var selector = settings.chosen.selector.replace(/:visible/, '');
+    if ((settings.settings.use_chosen === 'always') || ((settings.settings.use_chosen === 'chosen') && $element.is(selector) && ($element.find('option').size() >= minimum || minimum === 'Always Apply'))) {
+      options = $.extend(options, {
+        width: (($element.width() < minWidth) ? minWidth : $element.width()) + 'px'
+      });
+
+      // Apply chosen to the element.
+      return $element.chosen(options);
+    }
+    else if ((settings.settings.use_chosen === 'never') && (!$element.hasClass('chosen-disable'))) {
+      // Tell chosen to not process this element.
+      $element.addClass('chosen-disable');
+    }
+
     return false;
   }
 
