@@ -68,7 +68,7 @@ function hook_shs_json_callbacks_alter(&$callbacks) {
  * @param array $alter_options
  *   - vid: ID of vocabulary or field name
  *   - parent: ID of parent term
- *   - settings: Additional settings (for example "display node count", "language", etc.,)
+ *   - settings: Additional settings (for example "language", etc.,)
  */
 function hook_shs_term_get_children_alter(&$terms, &$alter_options) {
 

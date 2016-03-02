@@ -1,0 +1,4 @@
+name = Simple hierarchical select: node count
+core = 7.x
+description = Extends 'Simple hierarchical select' with "node count" functionality.
+dependencies[] = shs

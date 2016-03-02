@@ -22,11 +22,6 @@ Taxonomy module (Drupal core) needs to be enabled.
   "Simple hierarchical select" as widget type.
 
 * Field settings
-  - "Display number of nodes"
-    Displays the number of nodes associated to a term next to the term name in
-    the dropdown.
-    WARNING: on sites with a lot of terms and nodes this can be a great
-    performance killer (even if the data is cached).
   - "Allow creating new terms"
     Terms may be created directly from within the dropdowns (user needs to have
     permission to create terms in the vocabulary).

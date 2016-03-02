@@ -233,7 +233,6 @@ function shs_field_widget_info() {
       'field types' => array('taxonomy_term_reference', 'entityreference'),
       'settings' => array(
         'shs' => array(
-          'node_count' => FALSE,
           'create_new_terms' => FALSE,
           'create_new_levels' => FALSE,
           'force_deepest' => FALSE,
@@ -299,12 +298,6 @@ function shs_field_widget_settings_form($field, $instance) {
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#tree' => TRUE,
-  );
-  $form['shs']['node_count'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display number of nodes'),
-    '#description' => t('Display the number of nodes associated with the term.'),
-    '#default_value' => empty($settings['shs']['node_count']) ? FALSE : $settings['shs']['node_count'],
   );
 
   if ($field['type'] != 'entityreference' || ($field['type'] == 'entityreference' && !empty($field['settings']['handler_settings']['target_bundles']) && count($field['settings']['handler_settings']['target_bundles']) == 1)) {
@@ -747,10 +740,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
  * The structure is stored in the database cache as well as in drupal_static().
  * Cache has the following structure:
  * <code>
- *   [$parent] => array(
- *     [0] => array(tid1, tid2, tid3), // !$node_count.
- *     [1] => array('tid1 (x)', 'tid2 (x)', 'tid3 (x)'), // $node_count.
- *   ),
+ *   [$parent] => array(),
  * </code>
  *
  * @param <mixed> $identifier
@@ -759,7 +749,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
  * @param <int> $parent
  *   ID of parent term.
  * @param <array> $settings
- *   Additional settings (for example "display node count", "language", etc.,).
+ *   Additional settings (for example "language", etc.,).
  * @param <boolean> $reset
  *   If TRUE, rebuild the cache for the given $vid and $parent.
  *
@@ -791,28 +781,21 @@ function shs_term_get_children($identifier, $parent = 0, $settings = array(), $r
   }
 
   $terms = &drupal_static(__FUNCTION__, array());
-  $node_count = !empty($settings['node_count']) && variable_get('taxonomy_maintain_index_table', TRUE);
 
-  if ($reset || ($vocabulary_cache_key && empty($terms[$vocabulary_cache_key][$langcode][$parent][$node_count]))) {
+  if ($reset || ($vocabulary_cache_key && empty($terms[$vocabulary_cache_key][$langcode][$parent]))) {
     // Initialize list.
-    $terms[$vocabulary_cache_key][$langcode][$parent] = array(
-      0 => array(),
-      1 => array(),
-    );
+    $terms[$vocabulary_cache_key][$langcode][$parent] = array();
     $cache_key = "shs:{$vocabulary_cache_key}";
     // Get cached values.
     $cache = cache_get($cache_key);
-    if ($reset || !$cache || ($cache->expire && time() > $cache->expire) || empty($cache->data[$langcode][$parent][$node_count])) {
+    if ($reset || !$cache || ($cache->expire && time() > $cache->expire) || empty($cache->data[$langcode][$parent])) {
       // Cache is empty or data has become outdated or the parent is not cached.
       if ($cache) {
         // Cache exists and is not yet expired but $parent is missing.
         $terms[$vocabulary_cache_key] = $cache->data;
       }
       if ($reset) {
-        $terms[$vocabulary_cache_key][$langcode][$parent] = array(
-          0 => array(),
-          1 => array(),
-        );
+        $terms[$vocabulary_cache_key][$langcode][$parent] = array();
       }
 
       if (!is_numeric($vocabulary_cache_key) && is_array($identifier)) {
@@ -841,13 +824,7 @@ function shs_term_get_children($identifier, $parent = 0, $settings = array(), $r
           else if (module_exists('entity_translation')) {
             $term_name = entity_label('taxonomy_term', $term);
           }
-          $terms[$vocabulary_cache_key][$langcode][$parent][0][$term->tid] = $term_name;
-          if ($node_count) {
-            // Count nodes associated to this term (and its children).
-            $num_nodes = _shs_term_get_node_count($term, TRUE);
-            // Update term label.
-            $terms[$vocabulary_cache_key][$langcode][$parent][1][$term->tid] = t('!term_name (!node_count)', array('!term_name' => $term->name, '!node_count' => $num_nodes));
-          }
+          $terms[$vocabulary_cache_key][$langcode][$parent][$term->tid] = $term_name;
         }
       }
       // Set cached data.
@@ -866,7 +843,7 @@ function shs_term_get_children($identifier, $parent = 0, $settings = array(), $r
   );
   drupal_alter('shs_term_get_children', $terms, $alter_options);
 
-  return empty($terms[$vocabulary_cache_key][$langcode][$parent][$node_count]) ? array() : $terms[$vocabulary_cache_key][$langcode][$parent][$node_count];
+  return empty($terms[$vocabulary_cache_key][$langcode][$parent]) ? array() : $terms[$vocabulary_cache_key][$langcode][$parent];
 }
 
 /**
@@ -998,7 +975,7 @@ function shs_taxonomy_term_insert($term) {
   }
   // Update vocabulary cache for the terms parents.
   foreach ($term->parent as $parent) {
-    shs_term_get_children($term->vid, $parent, array('node_count' => TRUE), TRUE);
+    shs_term_get_children($term->vid, $parent, array(), TRUE);
   }
 }
 
@@ -1011,7 +988,7 @@ function shs_taxonomy_term_update($term) {
   }
   // Update vocabulary cache for the terms parents.
   foreach ($term->parent as $parent) {
-    shs_term_get_children($term->vid, $parent, array('node_count' => TRUE), TRUE);
+    shs_term_get_children($term->vid, $parent, array(), TRUE);
   }
 }
 
@@ -1030,7 +1007,7 @@ function shs_form_taxonomy_overview_terms_submit(&$form, &$form_state) {
     return;
   }
   // Update vocabulary cache for the terms parents.
-  shs_term_get_children($form_state['complete form']['#vocabulary']->vid, 0, array('node_count' => TRUE), TRUE);
+  shs_term_get_children($form_state['complete form']['#vocabulary']->vid, 0, array(), TRUE);
 }
 
 /**
@@ -1056,7 +1033,7 @@ function shs_form_taxonomy_form_term_submit(&$form, &$form_state) {
   if ($parents) {
     // Update vocabulary cache for the terms parents.
     foreach ($parents as $parent) {
-      shs_term_get_children($form_state['term']->vid, $parent->parent, array('node_count' => TRUE), TRUE);
+      shs_term_get_children($form_state['term']->vid, $parent->parent, array(), TRUE);
     }
   }
 }
@@ -1093,54 +1070,6 @@ function _shs_get_instances($entity_type, $bundle = NULL) {
     }
   }
   return $instances;
-}
-
-/**
- * Helper function to count number of nodes associated to a term.
- *
- * @param <object> $term
- *   The term object.
- * @param <boolean> $count_children
- *   If set to TRUE, nodes in child terms are counted also.
- *
- * @return <int>
- *   Number of nodes within the term.
- */
-function _shs_term_get_node_count($term, $count_children = FALSE) {
-  $num_nodes = &drupal_static(__FUNCTION__, array());
-
-  // Maybe this needs some more caching and value-updates on node_save()/
-  // _update()/delete().
-  if (empty($num_nodes["{$term->tid}:{$count_children}"])) {
-    $index_table = 'taxonomy_index';
-    if (module_exists('taxonomy_entity_index')) {
-      $index_table = 'taxonomy_entity_index';
-    }
-
-    // Count nodes associated to this term.
-    $num_nodes["{$term->tid}:{$count_children}"] = db_select($index_table, 'ti')
-            ->fields('ti')
-            ->condition('tid', $term->tid)
-            ->execute()
-            ->rowCount();
-
-    if ($count_children) {
-      $tids = array();
-      $tree = taxonomy_get_tree($term->vid, $term->tid);
-      foreach ($tree as $child_term) {
-        $tids[] = $child_term->tid;
-      }
-      if (count($tids)) {
-        $num_nodes["{$term->tid}:{$count_children}"] += db_select($index_table, 'ti')
-                ->fields('ti')
-                ->condition('tid', $tids, 'IN')
-                ->execute()
-                ->rowCount();
-      }
-    }
-  }
-
-  return isset($num_nodes["{$term->tid}:{$count_children}"]) ? $num_nodes["{$term->tid}:{$count_children}"] : 0;
 }
 
 /**
