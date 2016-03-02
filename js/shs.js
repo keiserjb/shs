@@ -544,6 +544,7 @@
           $field_orig.val(new_val);
         }
       }
+      $field_orig.trigger('change');
     }
   }
 
