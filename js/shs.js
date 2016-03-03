@@ -534,8 +534,17 @@
           $field_orig.val(new_val);
         }
       }
-      $field_orig.trigger('change');
     }
+    // Notify listeners about the change in the original select.
+    $field_orig.trigger({
+      type: 'change',
+      shs: {
+        triggeringElement: $triggering_element,
+        level: level,
+        settings: settings,
+        value: $triggering_element.val()
+      }
+    });
   }
 
   /**
