@@ -219,14 +219,19 @@ function shs_conditional_fields_states_handlers_alter(&$handlers) {
 /**
  * States handler for simple hierarchical selects.
  */
-function shs_conditional_fields_states_handler_shs($field, $field_info, $options, &$state) {
+function shs_conditional_fields_states_handler_shs($field, $field_info, &$options, &$state) {
   switch ($options['values_set']) {
     case CONDITIONAL_FIELDS_DEPENDENCY_VALUES_WIDGET:
     case CONDITIONAL_FIELDS_DEPENDENCY_VALUES_AND:
       if (empty($state[$options['state']][$options['selector']])) {
         return;
       }
-      $state[$options['state']][$options['selector']]['value'] = $state[$options['state']][$options['selector']]['value'][0]['tid'];
+      $old_state = $state[$options['state']][$options['selector']];
+      if (isset($old_state['value'][0]['tid'])) {
+        $options['selector'] .= '-0-tid';
+        $state[$options['state']][$options['selector']] = $old_state;
+        $state[$options['state']][$options['selector']]['value'] = $old_state['value'][0]['tid'];
+      }
       return;
 
     case CONDITIONAL_FIELDS_DEPENDENCY_VALUES_XOR:
@@ -980,10 +985,10 @@ function shs_json_term_add($vid, $parent, $term_name, $field = NULL) {
   }
 
   $term = (object) array(
-    'vid' => $vid,
-    'parent' => $parent,
-    'name' => str_replace('&amp;', '&', filter_xss($term_name)),
-    'language' => $language_content->language,
+            'vid' => $vid,
+            'parent' => $parent,
+            'name' => str_replace('&amp;', '&', filter_xss($term_name)),
+            'language' => $language_content->language,
   );
   // Save term.
   $status = taxonomy_term_save($term);
