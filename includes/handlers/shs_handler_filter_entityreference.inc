@@ -127,6 +127,10 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
     if (!empty($this->options['exposed']) && !empty($this->options['expose']['required'])) {
       $element_settings['required'] = TRUE;
     }
+    // Allowing other modules to add settings for shs.
+    if (!empty($this->options['expose']['shs'])) {
+      $element_settings = array_merge($element_settings, $this->options['expose']['shs']);
+    }
 
     // Generate a random hash to avoid merging of settings by drupal_add_js.
     // This is necessary until http://drupal.org/node/208611 lands for D7.
