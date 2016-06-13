@@ -404,13 +404,21 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
 
   // Get vocabulary names from allowed values.
   if ($field['type'] == 'entityreference') {
-    $vocabulary_names = $field['settings']['handler_settings']['target_bundles'];
+    if ('views' === $field['settings']['handler']) {
+      $vocabulary_names = array();
+      $view_settings = $field['settings']['handler_settings']['view'];
+      // Try to load vocabularies from view filter.
+      $vocabulary_names = _shs_entityreference_views_get_vocabularies($view_settings['view_name'], $view_settings['display_name']);
+    }
+    else {
+      $vocabulary_names = $field['settings']['handler_settings']['target_bundles'];
+    }
   }
   else {
     $allowed_values = reset($field['settings']['allowed_values']);
     $vocabulary_names = empty($allowed_values['vocabulary']) ? FALSE : $allowed_values['vocabulary'];
   }
-  if (empty($vocabulary_names)) {
+  if (empty($vocabulary_names) && 'views' !== $field['settings']['handler']) {
     // No vocabulary selected yet.
     return array();
   }
@@ -431,7 +439,7 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
     $element_value = 0;
   }
 
-  if (count($vocabularies) > 1 || !user_access('edit terms in ' . $vocabulary->vid)) {
+  if (count($vocabularies) > 1 || !isset($vocabulary) || (isset($vocabulary) && !user_access('edit terms in ' . $vocabulary->vid))) {
     // Creating new terms is allowed only with proper permission and if only one
     // vocabulary is selected as source.
     $instance['widget']['settings']['shs']['create_new_terms'] = FALSE;
@@ -1122,4 +1130,34 @@ function _shs_create_hash($length = 8) {
  */
 function shs_json_validation_vocabulary_identifier($identifier) {
   return TRUE;
+}
+
+/**
+ * Helper function to get the vocabularies used as filter in entityreference
+ * views.
+ *
+ * @param string $view_name
+ *   Name of view.
+ * @param string $display_id
+ *   Name of display.
+ *
+ * return string[]
+ *   List of vocabulary identifiers.
+ */
+function _shs_entityreference_views_get_vocabularies($view_name, $display_id) {
+  $view = views_get_view($view_name);
+  if (empty($view)) {
+    // Failed to load view.
+    return array();
+  }
+  $filters = $view->get_items('filter', $display_id);
+  $vocabularies = array();
+  foreach ($filters as $key => $filter) {
+    if (('taxonomy_vocabulary' !== $filter['table']) || ('machine_name' !== $key)) {
+      continue;
+    }
+    $vocabularies = array_keys($filter['value']) + $vocabularies;
+  }
+
+  return $vocabularies;
 }
