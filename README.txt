@@ -68,6 +68,16 @@ Taxonomy module (Drupal core) needs to be enabled.
     custom handler to avoid loading of all Drupal functions and speed up
     loading.
 
+* Entity reference (https://www.drupal.org/project/entityreference)
+  - "Simple hierarchical select" works out of the box with simple entity
+    reference fields. In case you use Views as entity selection mode for your
+    field there may be some problems, though.
+    Your reference view needs at least one filter for the vocabulary. Otherwise
+    "Simple hierarchical select" has no chance to retrieve the list of possible
+    options to display.
+    More complex reference views may cause "Simple hierarchical select" to fail,
+    so its best to keep it as simple as possible.
+
 
 -- CONTACT --
 
