@@ -118,6 +118,12 @@ function shs_json_callbacks() {
     'shs_json_term_add' => array(
       'callback' => 'shs_json_term_add',
       'arguments' => array(
+        'token' => array(
+          'callback' => 'shs_json_valid_token',
+          'arguments' => array(
+            'field_name' => '@field',
+          ),
+        ),
         'vid' => 'shs_json_validation_vocabulary_identifier',
         'parent' => 'is_numeric',
         'name' => 'is_string',
@@ -131,10 +137,33 @@ function shs_json_callbacks() {
 }
 
 /**
+ * Wrapper around drupal_valid_token().
+ *
+ * @param string $token
+ *   The token to validate.
+ * @param array $params
+ *   Additional params to generate the token key.
+ *   - field_name: (required) Name of field the token has been generated for.
+ *
+ * @return bool
+ *   TRUE if the token is valid, FALSE otherwise.
+ *
+ * @see drupal_valid_token()
+ */
+function shs_json_valid_token($token, array $params) {
+  if (empty($params['field_name'])) {
+    watchdog('shs', 'Missing mandantory token parameter "%param" in %function', array('%param' => 'field_name', '%function' => 'shs_json_valid_token', WATCHDOG_ERROR));
+    return FALSE;
+  }
+  $token_key = 'shs-' . $params['field_name'];
+  return drupal_valid_token($token, $token_key);
+}
+
+/**
  * Helper function to get the (validated) arguments for a JSON callback.
  *
  * @param <array> $callback
- *   Callback definition from campus_events_json_callbacks().
+ *   Callback definition from shs_json_callbacks().
  * @param <array> $arguments
  *   Unfiltered arguments posted with $.ajax().
  *
@@ -151,9 +180,40 @@ function _shs_json_callback_get_arguments($callback, $arguments) {
       continue;
     }
     $argument_valid = TRUE;
-    if ((($validation_function = $callback_arguments[$key]) !== FALSE) && function_exists($validation_function)) {
+    if (($validation_function = $callback_arguments[$key]) === FALSE) {
+      $argument_valid = FALSE;
+      continue;
+    }
+    $validation_arguments = array();
+    if (is_array($validation_function)) {
+      if (!isset($validation_function['callback'])) {
+        $argument_valid = FALSE;
+        watchdog('shs', 'Invalid structure for shs_json validation callback %key', array('%key' => $key), WATCHDOG_ERROR);
+        // Stop validation right now.
+        return $result;
+      }
+      foreach ($validation_function['arguments'] as $validation_argument_key => $validation_argument) {
+        if (strpos($validation_argument, '@') === 0) {
+          // Back-reference to callback argument.
+          $argument_name = substr($validation_argument, 1);
+          if (isset($arguments[$argument_name])) {
+            $validation_arguments[$validation_argument_key] = $arguments[$argument_name];
+          }
+        }
+        else {
+          $validation_arguments[$validation_argument_key] = $validation_argument;
+        }
+      }
+      $validation_function = $validation_function['callback'];
+    }
+    if (function_exists($validation_function)) {
       // Validate argument.
-      $argument_valid = $validation_function($value);
+      if (empty($validation_arguments)) {
+        $argument_valid = call_user_func($validation_function, $value);
+      }
+      else {
+        $argument_valid = call_user_func($validation_function, $value, $validation_arguments);
+      }
     }
     if ($argument_valid) {
       // Add argument and its value to the result list.
@@ -548,6 +608,9 @@ function shs_field_widget_afterbuild($element, &$form_state) {
       );
     }
 
+    // Create token to prevent against CSRF attacks.
+    $token = drupal_get_token('shs-' . $element['#name']);
+
     // Create settings needed for our js magic.
     $settings_js = array(
       'shs' => array(
@@ -559,6 +622,7 @@ function shs_field_widget_afterbuild($element, &$form_state) {
             'parents' => array_reverse($parents),
             'any_label' => empty($element['#required']) ? t('- None -', array(), array('context' => 'shs')) : t('- Select a value -', array(), array('context' => 'shs')),
             'any_value' => '_none',
+            'token' => $token,
           ),
         ),
       ),
@@ -975,6 +1039,8 @@ function shs_add_term_access($vid, $parent = NULL, $field = NULL, $account = NUL
 /**
  * Adds a term with ajax.
  *
+ * @param string $token
+ *   Custom validation token.
  * @param int $vid
  *   ID of vocabulary to create the term in.
  * @param int $parent
@@ -987,8 +1053,14 @@ function shs_add_term_access($vid, $parent = NULL, $field = NULL, $account = NUL
  * @return mixed
  *   Array with tid and name or FALSE on error.
  */
-function shs_json_term_add($vid, $parent, $term_name, $field = NULL) {
+function shs_json_term_add($token, $vid, $parent, $term_name, $field = NULL) {
   global $language_content;
+  if (empty($token)) {
+    return FALSE;
+  }
+  if (!is_numeric($vid)) {
+    return FALSE;
+  }
   if (!shs_add_term_access($vid, $parent, $field)) {
     // Sorry, but this user may not add a term to this vocabulary.
     return FALSE;
