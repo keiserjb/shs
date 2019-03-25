@@ -37,7 +37,7 @@ function shs_js() {
       'dependencies' => array('taxonomy', 'field', 'field_sql_storage'),
     ),
   );
-  drupal_alter('shs_js_info', $settings);
+  backdrop_alter('shs_js_info', $settings);
   return $settings;
 }
 
@@ -65,7 +65,7 @@ function shs_json() {
     }
   }
   // Return result as JSON string.
-  drupal_json_output($result);
+  backdrop_json_output($result);
 }
 
 /**
@@ -106,12 +106,12 @@ function shs_json_callbacks() {
     ),
   );
   // Let other modules add some more callbacks and alter the existing.
-  drupal_alter('shs_json_callbacks', $callbacks);
+  backdrop_alter('shs_json_callbacks', $callbacks);
   return $callbacks;
 }
 
 /**
- * Wrapper around drupal_valid_token().
+ * Wrapper around backdrop_valid_token().
  *
  * @param string $token
  *   The token to validate.
@@ -122,7 +122,7 @@ function shs_json_callbacks() {
  * @return bool
  *   TRUE if the token is valid, FALSE otherwise.
  *
- * @see drupal_valid_token()
+ * @see backdrop_valid_token()
  */
 function shs_json_valid_token($token, array $params) {
   if (empty($params['field_name'])) {
@@ -134,7 +134,7 @@ function shs_json_valid_token($token, array $params) {
     return FALSE;
   }
   $token_key = 'shs-' . $params['field_name'];
-  return drupal_valid_token($token, $token_key);
+  return backdrop_valid_token($token, $token_key);
 }
 
 /**
@@ -431,7 +431,7 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
   $element_value = NULL;
   $submitted_value = NULL;
   if (!empty($form_state['values']) && !empty($element['#parents'])) {
-    $submitted_value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+    $submitted_value = backdrop_array_get_nested_value($form_state['values'], $element['#parents']);
   }
   if (!empty($items[$delta][$field_column])) {
     // Use saved value from database or cache.
@@ -511,7 +511,7 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
     '#attributes' => array(
       'class' => array('shs-enabled'),
     ),
-    // Prevent errors with drupal_strlen().
+    // Prevent errors with backdrop_strlen().
     '#maxlength' => NULL,
     '#element_validate' => array('shs_field_widget_validate'),
     '#after_build' => array('shs_field_widget_afterbuild'),
@@ -531,10 +531,10 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
  * Afterbuild callback for widgets of type "taxonomy_shs".
  */
 function shs_field_widget_afterbuild($element, &$form_state) {
-  $js_added = &drupal_static(__FUNCTION__ . '_js_added', array());
-  // Generate a random hash to avoid merging of settings by drupal_add_js.
+  $js_added = &backdrop_static(__FUNCTION__ . '_js_added', array());
+  // Generate a random hash to avoid merging of settings by backdrop_add_js.
   // This is necessary until http://drupal.org/node/208611 lands for D7.
-  $js_hash = &drupal_static(__FUNCTION__ . '_js_hash');
+  $js_hash = &backdrop_static(__FUNCTION__ . '_js_hash');
 
   if (empty($js_hash)) {
     $js_hash = _shs_create_hash();
@@ -542,7 +542,7 @@ function shs_field_widget_afterbuild($element, &$form_state) {
 
   $parents = array();
   // Get default value from form state and set it to element.
-  $default_value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+  $default_value = backdrop_array_get_nested_value($form_state['values'], $element['#parents']);
   if (!empty($default_value)) {
     // Use value from form_state (for example for fields with cardinality = -1).
     $element['#default_value'] = $default_value;
@@ -551,9 +551,9 @@ function shs_field_widget_afterbuild($element, &$form_state) {
   // Add main Javascript behavior and style only once.
   if (count($js_added) == 0) {
     // Add behavior.
-    drupal_add_js(drupal_get_path('module', 'shs') . '/js/shs.js');
+    backdrop_add_js(backdrop_get_path('module', 'shs') . '/js/shs.js');
     // Add styles.
-    drupal_add_css(drupal_get_path('module', 'shs') . '/theme/shs.form.css');
+    backdrop_add_css(backdrop_get_path('module', 'shs') . '/theme/shs.form.css');
   }
 
   // Create Javascript settings for the element only if it hasn't been added
@@ -567,7 +567,7 @@ function shs_field_widget_afterbuild($element, &$form_state) {
       $parents[] = array('tid' => 0);
     }
     else {
-      $term_parents = taxonomy_get_parents_all($element_value);
+      $term_parents = taxonomy_term_load_parents_all($element_value);
       foreach ($term_parents as $term) {
         // Create term lineage.
         $parents[] = array('tid' => $term->tid);
@@ -587,7 +587,7 @@ function shs_field_widget_afterbuild($element, &$form_state) {
     }
 
     // Create token to prevent against CSRF attacks.
-    $token = drupal_get_token('shs-' . $element['#name']);
+    $token = backdrop_get_token('shs-' . $element['#name']);
 
     // Create settings needed for our js magic.
     $settings_js = array(
@@ -606,10 +606,10 @@ function shs_field_widget_afterbuild($element, &$form_state) {
       ),
     );
     // Allow other modules to alter these settings.
-    drupal_alter(array('shs_js_settings', "shs_{$element['#field_name']}_js_settings"), $settings_js, $element['#field_name'], $vocabulary_identifier);
+    backdrop_alter(array('shs_js_settings', "shs_{$element['#field_name']}_js_settings"), $settings_js, $element['#field_name'], $vocabulary_identifier);
 
     // Add settings.
-    drupal_add_js($settings_js, 'setting');
+    backdrop_add_js($settings_js, 'setting');
 
     if (empty($js_added[$element['#name']])) {
       $js_added[$element['#name']] = array();
@@ -754,7 +754,7 @@ function shs_field_formatter_prepare_view($entity_type, $entities, $field, $inst
     foreach ($items[$entity_id] as $delta => $item) {
       $items[$entity_id][$delta]['parents'] = array();
       // Load list of parent terms.
-      $parents = taxonomy_get_parents_all($item[$field_column]);
+      $parents = taxonomy_term_load_parents_all($item[$field_column]);
       // Remove current term from list.
       array_shift($parents);
       if (module_exists('i18n_taxonomy')) {
@@ -799,7 +799,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
             'data' => $settings['linked'] ? l($parent->name, "taxonomy/term/{$parent->tid}") : $parent->name,
             'class' => array('shs-parent'),
           );
-        };
+        }
         // Add name of selected term.
         $list_items[] = array(
           'data' => $settings['linked'] ? l($item['term']->name, "taxonomy/term/{$item['term']->tid}") : $item['term']->name,
@@ -815,7 +815,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
       }
 
       // Add basic style.
-      $elements['#attached']['css'][] = drupal_get_path('module', 'shs') . '/theme/shs.formatter.css';
+      $elements['#attached']['css'][] = backdrop_get_path('module', 'shs') . '/theme/shs.formatter.css';
       break;
   }
 
@@ -825,7 +825,7 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
 /**
  * Function to get the list of children of a term.
  *
- * The structure is stored in the database cache as well as in drupal_static().
+ * The structure is stored in the database cache as well as in backdrop_static().
  * Cache has the following structure:
  * <code>
  *   [$parent] => array(),
@@ -868,7 +868,7 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
     $vocabulary_cache_key = $identifier['field_name'];
   }
 
-  $terms = &drupal_static(__FUNCTION__, array());
+  $terms = &backdrop_static(__FUNCTION__, array());
 
   if ($reset || ($vocabulary_cache_key && empty($terms[$vocabulary_cache_key][$langcode][$parent]))) {
     // Initialize list.
@@ -929,7 +929,7 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
     'parent' => $parent,
     'settings' => $settings,
   );
-  drupal_alter('shs_term_get_children', $terms, $alter_options);
+  backdrop_alter('shs_term_get_children', $terms, $alter_options);
 
   return empty($terms[$vocabulary_cache_key][$langcode][$parent]) ? array() : $terms[$vocabulary_cache_key][$langcode][$parent];
 }
@@ -979,7 +979,7 @@ function shs_json_term_get_children($vid, array $parent = array(), array $settin
 /**
  * Check if a term has any children.
  *
- * Copied from taxonomy_get_children() but just checks existence instead of
+ * Copied from taxonomy_term_load_children() but just checks existence instead of
  * loading terms.
  */
 function shs_term_has_children($tid, $vid) {
@@ -1163,7 +1163,7 @@ function _shs_get_instances($entity_type, $bundle = NULL) {
  * @return string
  *   Random string.
  *
- * @see DrupalTestCase::randomName()
+ * @see BackdropTestCase::randomName()
  */
 function _shs_create_hash($length = 8) {
   $values = array_merge(range(65, 90), range(97, 122), range(48, 57));
@@ -1216,4 +1216,15 @@ function _shs_entityreference_views_get_vocabularies($view_name, $display_id) {
   }
 
   return $vocabularies;
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function shs_autoload_info() {
+  return array(
+    'shs_handler_filter_entityreference' => 'includes/handlers/shs_handler_filter_entityreference.inc',
+    'shs_handler_filter_term_node_tid' => 'includes/handlers/shs_handler_filter_term_node_tid.inc',
+    'shs_handler_filter_term_node_tid_depth' => 'includes/handlers/shs_handler_filter_term_node_tid_depth.inc',
+  );
 }

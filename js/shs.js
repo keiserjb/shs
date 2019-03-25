@@ -3,12 +3,12 @@
  * Custom behaviors for Simple hierarchical select.
  */
 
-(function ($, Drupal) {
+(function ($, Backdrop) {
 
   /**
    * Creates the widget for Simple hierarchical select.
    */
-  Drupal.behaviors.shsWidgetCreate = {
+  Backdrop.behaviors.shsWidgetCreate = {
 
     // Default function to attach the behavior.
     attach: function (context, settings) {
@@ -119,7 +119,7 @@
     }
 
     $.ajax({
-      url: Drupal.settings.basePath + '?q=' + Drupal.settings.pathPrefix + 'js/shs/json',
+      url: Backdrop.settings.basePath + '?q=' + Backdrop.settings.pathPrefix + 'js/shs/json',
       type: 'POST',
       dataType: 'json',
       cache: true,
@@ -160,7 +160,7 @@
           $.each(data.data, function(key, term) {
             if (term.vid && settings.settings.create_new_terms) {
               // Add option to add new item.
-              options[options.length] = new Option(Drupal.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
+              options[options.length] = new Option(Backdrop.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
             }
             else if (term.tid) {
               option = new Option(term.label, term.tid);
@@ -216,7 +216,7 @@
    */
   termAddNew = function($triggering_element, $container, term, base_id, level, settings) {
     $.ajax({
-      url: Drupal.settings.basePath + '?q=' + Drupal.settings.pathPrefix + 'js/shs/json',
+      url: Backdrop.settings.basePath + '?q=' + Backdrop.settings.pathPrefix + 'js/shs/json',
       type: 'POST',
       dataType: 'json',
       cache: true,
@@ -259,7 +259,7 @@
             options_new[options_new.length] = new Option(settings.any_label, settings.any_value);
             if (settings.settings.create_new_terms) {
               // Add option to add new item.
-              options_new[options_new.length] = new Option(Drupal.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
+              options_new[options_new.length] = new Option(Backdrop.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
             }
             // Try to convert the element to a "Chosen" element.
             if (!elementConvertToChosen($element_new, settings)) {
@@ -301,7 +301,7 @@
   updateElements = function($triggering_element, base_id, settings, level) {
     // Remove all following elements.
     $triggering_element.nextAll('select').each(function() {
-      if (Drupal.settings.chosen) {
+      if (Backdrop.settings.chosen) {
         // Remove element created by chosen.
         var elem_id = $(this).attr('id');
         $element_chosen = $('#' + elem_id.replace(/-/g, '_') + '_chosen');
@@ -319,7 +319,7 @@
     if ($triggering_element.val() == '_add_new_') {
       // Hide element.
       $triggering_element.hide();
-      if (Drupal.settings.chosen) {
+      if (Backdrop.settings.chosen) {
         // Remove element created by chosen.
         var elem_id = $triggering_element.attr('id');
         $('#' + elem_id.replace(/-/g, '_') + '_chosen').remove();
@@ -345,7 +345,7 @@
       $buttons.appendTo($container);
       $cancel = $('<a>')
         .attr('href', '#')
-        .html(Drupal.t('Cancel'))
+        .html(Backdrop.t('Cancel'))
         .bind('click', function(event) {
           event.preventDefault();
           // Remove container.
@@ -369,7 +369,7 @@
 
       $save = $('<a>')
         .attr('href', '#')
-        .html(Drupal.t('Save'))
+        .html(Backdrop.t('Save'))
         .bind('click', function(event) {
           event.preventDefault();
           // Get the new term name.
@@ -556,15 +556,15 @@
    */
   elementConvertToChosen = function($element, settings) {
     // Returns false if chosen is not available or its settings are undefined.
-    if ($.fn.chosen === void 0 || !Drupal.settings.hasOwnProperty('chosen') || Drupal.settings.chosen === void 0) {
+    if ($.fn.chosen === void 0 || !Backdrop.settings.hasOwnProperty('chosen') || Backdrop.settings.chosen === void 0) {
       return false;
     }
 
     var name = $element.attr('name');
-    settings.chosen = settings.chosen || Drupal.settings.chosen;
+    settings.chosen = settings.chosen || Backdrop.settings.chosen;
     var minWidth = settings.chosen.minimum_width;
-    var multiple = Drupal.settings.chosen.multiple;
-    var maxSelectedOptions = Drupal.settings.chosen.max_selected_options;
+    var multiple = Backdrop.settings.chosen.multiple;
+    var maxSelectedOptions = Backdrop.settings.chosen.max_selected_options;
 
     // Define options.
     var options = {
@@ -599,4 +599,4 @@
     return false;
   }
 
-})(jQuery, Drupal);
+})(jQuery, Backdrop);

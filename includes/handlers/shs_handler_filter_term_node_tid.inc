@@ -98,7 +98,7 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
           $parents[] = array('tid' => $parents_multiple);
         }
         elseif (is_string($default_value)) {
-          $term_parents = taxonomy_get_parents_all($default_value);
+          $term_parents = taxonomy_term_load_parents_all($default_value);
           // Remove selected term from list.
           array_shift($term_parents);
           foreach (array_reverse($term_parents) as $term) {
@@ -129,10 +129,11 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
         $element_settings = array_merge($element_settings, $this->options['expose']['shs']);
       }
 
-      // Generate a random hash to avoid merging of settings by drupal_add_js.
+      // Generate a random hash to avoid merging of settings by backdrop_add_js.
       // This is necessary until http://drupal.org/node/208611 lands for D7.
       $js_hash = _shs_create_hash();
       // Create settings needed for our js magic.
+      // TODO This variable was probably removed in Backdrop without replacement.
       $settings_js = array(
         'shs' => array(
           $identifier . ($multiple ? '[]' : '') => array(
@@ -148,11 +149,11 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
           ),
         ),
       );
-      drupal_alter(array('shs_js_settings', "shs_{$identifier}_js_settings"), $settings_js, $identifier, $vocabulary->vid);
+      backdrop_alter(array('shs_js_settings', "shs_{$identifier}_js_settings"), $settings_js, $identifier, $vocabulary->vid);
       // Add settings.
-      drupal_add_js($settings_js, 'setting');
+      backdrop_add_js($settings_js, 'setting');
       // Add behavior.
-      drupal_add_js(drupal_get_path('module', 'shs') . '/js/shs.js');
+      backdrop_add_js(backdrop_get_path('module', 'shs') . '/js/shs.js');
 
       // Rewrite default select element.
       $form['value'] += array(

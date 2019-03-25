@@ -9,5 +9,22 @@
  * Implements hook_uninstall().
  */
 function shs_node_count_uninstall() {
-  variable_del('shs_node_count_format');
+  config_clear('shs_node_count.settings', 'shs_node_count_format');
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function shs_node_count_update_1000() {
+  $config = config('shs_node_count.settings');
+  $config->set('shs_node_count_format', update_variable_get('shs_node_count_format', 'dynamic value in file /shs/modules/shs_node_count/shs_node_count.module line 53'));
+  update_variable_del('shs_node_count_format');
+}
+
+/**
+ * Implements hook_install().
+ */
+function shs_node_count_install() {
+  // Dynamically generated variable data was detected.
+  // /shs/modules/shs_node_count/shs_node_count.module line 53
 }
