@@ -59,7 +59,7 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
     parent::value_form($form, $form_state);
 
     $multiple = $this->options['expose']['multiple'];
-    $vocabulary = taxonomy_vocabulary_machine_name_load($this->options['vocabulary']);
+    $vocabulary = taxonomy_vocabulary_load($this->options['vocabulary']);
     if (empty($vocabulary) && $this->options['limit']) {
       $form['markup'] = array(
         '#markup' => '<div class="form-item">' . t('An invalid vocabulary is selected. Please change it in the options.') . '</div>',
@@ -133,12 +133,11 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
       // This is necessary until http://drupal.org/node/208611 lands for D7.
       $js_hash = _shs_create_hash();
       // Create settings needed for our js magic.
-      // TODO This variable was probably removed in Backdrop without replacement.
       $settings_js = array(
         'shs' => array(
           $identifier . ($multiple ? '[]' : '') => array(
             $js_hash => array(
-              'vid' => $vocabulary->vid,
+              'vocabulary' => $vocabulary->machine_name,
               'settings' => $element_settings,
               'default_value' => $default_value,
               'parents' => $parents,
@@ -149,7 +148,7 @@ class shs_handler_filter_term_node_tid extends views_handler_filter_term_node_ti
           ),
         ),
       );
-      backdrop_alter(array('shs_js_settings', "shs_{$identifier}_js_settings"), $settings_js, $identifier, $vocabulary->vid);
+      backdrop_alter(array('shs_js_settings', "shs_{$identifier}_js_settings"), $settings_js, $identifier, $vocabulary->machine_name);
       // Add settings.
       backdrop_add_js($settings_js, 'setting');
       // Add behavior.

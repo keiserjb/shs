@@ -126,7 +126,7 @@
       data: {
         callback: 'shs_json_term_get_children',
         arguments: {
-          vid: settings.vid,
+          vocabulary: settings.vocabulary,
           parent: parent_value,
           settings: settings.settings,
           field: settings.fieldName
@@ -158,7 +158,7 @@
 
           // Add retrieved list of options.
           $.each(data.data, function(key, term) {
-            if (term.vid && settings.settings.create_new_terms) {
+            if (term.vocabulary && settings.settings.create_new_terms) {
               // Add option to add new item.
               options[options.length] = new Option(Backdrop.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
             }
@@ -224,7 +224,7 @@
         callback: 'shs_json_term_add',
         arguments: {
           token: settings.token,
-          vid: term.vid,
+          vocabulary: term.vocabulary,
           parent: term.parent,
           name: term.name,
           field: settings.fieldName
@@ -376,7 +376,7 @@
           var termName = $(this).parents('.shs-term-add-new-wrapper').find('input.shs-term-name').val();
           // Create a term object.
           var term = {
-            vid: settings.vid,
+            vocabulary: settings.vocabulary,
             parent: (level === 1) ? 0 : ($triggering_element.prevAll('.shs-select').val() || 0),
             name: termName
           };
