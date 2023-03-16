@@ -62,10 +62,10 @@ function shs_node_count_shs_term_get_children_alter(&$terms, &$alter_options) {
   );
   $format = config_get('shs_node_count.settings', 'shs_node_count_format');
   foreach ($terms as &$item) {
-    array_walk($item[$langcode][$alter_options['parent']], (&$name $key) ($term $format){
-      $term->tid = $key
-      $count = shs_node_count_term_get_node_count($term, TRUE)
-      $name = sprintf($format, $name, $count)
+    array_walk($item[$langcode][$alter_options['parent']], function (&$name, $key) use ($term, $format) {
+      $term->tid = $key;
+      $count = shs_node_count_term_get_node_count($term, TRUE);
+      $name = sprintf($format, $name, $count);
     });
   }
 }
