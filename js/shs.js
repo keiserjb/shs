@@ -446,6 +446,10 @@
     if (settings.settings.hasOwnProperty('required') && settings.settings.required) {
       $element.addClass('required');
     }
+    // Support Bootstrap.
+    if (Drupal.settings.bootstrap !== undefined) {
+      $element.addClass('form-control');
+    }
     // Return the new element.
     return $element;
   }
