@@ -1,0 +1,4 @@
+{
+    "_config_name": "shs_node_count.settings",
+    "shs_node_count_format": "%s (%d)"
+}

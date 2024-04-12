@@ -15,7 +15,7 @@ function shs_requirements($phase) {
   if ($phase !== 'runtime' || !module_exists('chosen')) {
     return $requirements;
   }
-  if (($info = drupal_get_library('chosen', 'chosen')) === FALSE) {
+  if (($info = backdrop_get_library('chosen', 'chosen')) === FALSE) {
     return $requirements;
   }
   // Chosen version should be at least 1.0.

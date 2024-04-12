@@ -1,4 +1,5 @@
 name = Simple hierarchical select: node count
-core = 7.x
+backdrop = 1.x
+type = module
 description = Extends 'Simple hierarchical select' with "node count" functionality.
 dependencies[] = shs

@@ -83,7 +83,7 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
       $vocabulary_names = _shs_entityreference_views_get_vocabularies($view_settings['view_name'], $view_settings['display_name']);
     }
     else {
-      $vocabulary_names = empty($field['settings']['handler_settings']['target_bundles']) ? array() : $field['settings']['handler_settings']['target_bundles'];
+      $vocabulary_names = empty($field['settings']['handler_settings']['target_bundles'])?array() : $field['settings']['handler_settings']['target_bundles'];
     }
     $vocabularies = array();
     foreach ($vocabulary_names as $vocabulary_name) {
@@ -111,7 +111,7 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
         }
       }
       elseif (is_string($default_value)) {
-        $term_parents = taxonomy_get_parents_all($default_value);
+        $term_parents = taxonomy_term_load_parents_all($default_value);
         // Remove selected term from list.
         array_shift($term_parents);
         foreach (array_reverse($term_parents) as $term) {
@@ -150,10 +150,11 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
       $vocabulary_identifier = $vocabularies[0]->vid;
     }
 
-    // Generate a random hash to avoid merging of settings by drupal_add_js.
+    // Generate a random hash to avoid merging of settings by backdrop_add_js.
     // This is necessary until http://drupal.org/node/208611 lands for D7.
     $js_hash = _shs_create_hash();
     // Create settings needed for our js magic.
+    // TODO This variable was probably removed in Backdrop without replacement.
     $settings_js = array(
       'shs' => array(
         $identifier => array(
@@ -163,16 +164,16 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
             'default_value' => $default_value,
             'parents' => $parents,
             'multiple' => $multiple,
-            'any_label' => variable_get('views_exposed_filter_any_label', 'new_any') == 'old_any' ? t('<Any>') : t('- Any -'),
+            'any_label' => variable_get('views_exposed_filter_any_label', 'new_any') == 'old_any'?t('<Any>') : t('- Any -'),
             'any_value' => 'All',
           ),
         ),
       ),
     );
     // Add settings.
-    drupal_add_js($settings_js, 'setting');
+    backdrop_add_js($settings_js, 'setting');
     // Add behavior.
-    drupal_add_js(drupal_get_path('module', 'shs') . '/js/shs.js');
+    backdrop_add_js(backdrop_get_path('module', 'shs') . '/js/shs.js');
 
     if (is_array($default_value) && $multiple && $default_value[0] != 'All') {
       foreach ($default_value as $delta => $level) {
