@@ -847,21 +847,10 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
  *   List of child terms keyed by term id.
  */
 function shs_term_get_children($identifier, $parent = 0, array $settings = array(), $reset = FALSE) {
-<<<<<<< HEAD
   // Use Backdrop's language handling mechanism.
   $langcode = isset($settings['language']) && !empty($settings['language']->language)
     ? $settings['language']->language
     : language_default('language')->langcode;
-=======
-  global $language;
-  $langcode = $language->langcode;
-  if (empty($settings['language']->langcode)) {
-    $settings['language'] = $language;
-  }
-  else {
-    $langcode = $settings['language']->langcode;
-  }
->>>>>>> 8da9bae3b480c0f15cdf743f88504d3e84586248
 
   $vocabularies = array();
   $vocabulary_cache_key = NULL;
@@ -871,11 +860,7 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
     $vocabulary_cache_key = $identifier;
     // Assuming taxonomy_vocabulary_load now accepts machine names directly.
     if (($vocabulary = taxonomy_vocabulary_load($identifier)) === FALSE) {
-<<<<<<< HEAD
       watchdog('Simple hierarchical select', 'Unknown vocabulary with machine name !vocabulary used to get terms.', array('!vocabulary' => $identifier));
-=======
-      watchdog('Simple hierarchical select', 'Unknown vocabulary with ID !vocabulary used to get terms.', array('!vocabulary' => $identifier));
->>>>>>> 8da9bae3b480c0f15cdf743f88504d3e84586248
       return array();
     }
     $vocabularies[$vocabulary->machine_name] = $vocabulary->machine_name; // Assuming machine_name is what you want to store.
@@ -898,26 +883,7 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
         $terms[$vocabulary_cache_key][$langcode][$parent] = array();
       }
 
-<<<<<<< HEAD
       foreach ($vocabularies as $vocabulary) {
-=======
-      if (!is_numeric($vocabulary_cache_key) && is_array($identifier)) {
-        // Get list of vocabularies from field configuration.
-        $field = field_info_field($identifier['field_name']);
-        if (!empty($field['settings']['handler_settings']['target_bundles'])) {
-          foreach ($field['settings']['handler_settings']['target_bundles'] as $vocabulary_name) {
-            if (($vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name)) !== FALSE) {
-              $vocabularies[$vocabulary_name] = $vocabulary->vocabulary;
-            }
-          }
-        }
-      }
-
-      foreach ($vocabularies as $vocabulary) {
-        // Get term children (only first level).
-        // Only load entities if i18n_taxonomy or entity_translation is
-        // installed.
->>>>>>> 8da9bae3b480c0f15cdf743f88504d3e84586248
         $load_entities = module_exists('i18n_taxonomy') || module_exists('entity_translation');
         $tree = taxonomy_get_tree($vocabulary, $parent, 1, $load_entities);
         foreach ($tree as $term) {
@@ -937,15 +903,6 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
       $terms[$vocabulary_cache_key] = $cache->data;
     }
   }
-<<<<<<< HEAD
-=======
-  // Allow other module to modify the list of terms.
-  $alter_options = array(
-    'vocabulary' => $vocabulary_cache_key,
-    'parent' => $parent,
-    'settings' => $settings,
-  );
->>>>>>> 8da9bae3b480c0f15cdf743f88504d3e84586248
   backdrop_alter('shs_term_get_children', $terms, $alter_options);
 
   return empty($terms[$vocabulary_cache_key][$langcode][$parent]) ? array() : $terms[$vocabulary_cache_key][$langcode][$parent];
@@ -969,10 +926,6 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
  * @see shs_term_get_children()
  */
 function shs_json_term_get_children($vocabulary, array $parent = array(), array $settings = array(), $field = NULL) {
-<<<<<<< HEAD
-  //dpm($vocabulary);
-=======
->>>>>>> 8da9bae3b480c0f15cdf743f88504d3e84586248
   $scope = $result = array();
   foreach ($parent as $tid) {
     $scope[] = shs_term_get_children($vocabulary, $tid, $settings);
@@ -993,7 +946,6 @@ function shs_json_term_get_children($vocabulary, array $parent = array(), array 
       );
     }
   }
-  dpm($result);
   return $result;
 }
 
