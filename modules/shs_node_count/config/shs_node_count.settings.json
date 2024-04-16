@@ -1,4 +1,4 @@
 {
     "_config_name": "shs_node_count.settings",
-    "shs_node_count_format": "%s (%d)"
+    "shs_node_count_format": "dynamic value in file /shs/modules/shs_node_count/shs_node_count.module line 53"
 }

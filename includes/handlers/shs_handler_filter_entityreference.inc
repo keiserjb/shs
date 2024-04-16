@@ -83,7 +83,7 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
       $vocabulary_names = _shs_entityreference_views_get_vocabularies($view_settings['view_name'], $view_settings['display_name']);
     }
     else {
-      $vocabulary_names = empty($field['settings']['handler_settings']['target_bundles'])?array() : $field['settings']['handler_settings']['target_bundles'];
+      $vocabulary_names = empty($field['settings']['handler_settings']['target_bundles']) ? array() : $field['settings']['handler_settings']['target_bundles'];
     }
     $vocabularies = array();
     foreach ($vocabulary_names as $vocabulary_name) {
@@ -164,7 +164,7 @@ class shs_handler_filter_entityreference extends views_handler_filter_numeric {
             'default_value' => $default_value,
             'parents' => $parents,
             'multiple' => $multiple,
-            'any_label' => variable_get('views_exposed_filter_any_label', 'new_any') == 'old_any'?t('<Any>') : t('- Any -'),
+            'any_label' => variable_get('views_exposed_filter_any_label', 'new_any') == 'old_any' ? t('<Any>') : t('- Any -'),
             'any_value' => 'All',
           ),
         ),

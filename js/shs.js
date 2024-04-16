@@ -111,12 +111,12 @@
    * @param settings
    *   Field settings.
    * @param parent_value
-    *   Value which has been selected in the parent element (== "selected term").
-    * @param default_value
-    *   Value to use as default.
-    * @param base_id
-    *   ID of original field which is rewritten as "taxonomy_shs".
-    */
+   *   Value which has been selected in the parent element (== "selected term").
+   * @param default_value
+   *   Value to use as default.
+   * @param base_id
+   *   ID of original field which is rewritten as "taxonomy_shs".
+   */
   getTermChildren = function($element, settings, parent_value, default_value, base_id) {
     console.log('Getting term children for', parent_value);
     // Check if parent_value is number and convert it.
@@ -132,7 +132,7 @@
       data: {
         callback: 'shs_json_term_get_children',
         arguments: {
-          vid: settings.vid,
+          vocabulary: settings.vocabulary,
           parent: parent_value,
           settings: settings.settings,
           field: settings.fieldName
@@ -165,7 +165,7 @@
 
           // Add retrieved list of options.
           $.each(data.data, function(key, term) {
-            if (term.vid && settings.settings.create_new_terms) {
+            if (term.vocabulary && settings.settings.create_new_terms) {
               // Add option to add new item.
               options[options.length] = new Option(Backdrop.t('<Add new item>', {}, {context: 'shs'}), '_add_new_');
             }
@@ -232,7 +232,7 @@
         callback: 'shs_json_term_add',
         arguments: {
           token: settings.token,
-          vid: term.vid,
+          vocabulary: term.vocabulary,
           parent: term.parent,
           name: term.name,
           field: settings.fieldName
@@ -385,7 +385,7 @@
           var termName = $(this).parents('.shs-term-add-new-wrapper').find('input.shs-term-name').val();
           // Create a term object.
           var term = {
-            vid: settings.vid,
+            vocabulary: settings.vocabulary,
             parent: (level === 1) ? 0 : ($triggering_element.prevAll('.shs-select').val() || 0),
             name: termName
           };
@@ -614,4 +614,3 @@
   }
 
 })(jQuery, Backdrop);
-
