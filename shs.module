@@ -130,7 +130,6 @@ function shs_json_valid_token($token, array $params) {
       '%param' => 'field_name',
       '%function' => 'shs_json_valid_token',
     );
-    watchdog('shs', 'Missing mandantory token parameter "%param" in %function', $t_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $token_key = 'shs-' . $params['field_name'];
@@ -166,7 +165,6 @@ function _shs_json_callback_get_arguments(array $callback, array $arguments) {
     if (is_array($validation_function)) {
       if (!isset($validation_function['callback'])) {
         $argument_valid = FALSE;
-        watchdog('shs', 'Invalid structure for shs_json validation callback %key', array('%key' => $key), WATCHDOG_ERROR);
         // Stop validation right now.
         return $result;
       }
@@ -467,12 +465,14 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
   }
   $vocabularies = array();
   foreach ($vocabulary_names as $vocabulary_name) {
-    if (($vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name)) === FALSE) {
-      // Vocabulary not found. Stop here.
+    // Use the updated function to load vocabularies by machine name.
+    if (($vocabulary = taxonomy_vocabulary_load($vocabulary_name)) === FALSE) {
+      // Vocabulary not found. Stop here and return empty array.
       return array();
     }
     $vocabularies[] = $vocabulary;
   }
+
 
   // Check if term exists (the term could probably be deleted meanwhile).
   if ($element_value && (taxonomy_term_load($element_value) === FALSE)) {
@@ -844,57 +844,39 @@ function shs_field_formatter_view($entity_type, $entity, $field, $instance, $lan
  *   List of child terms keyed by term id.
  */
 function shs_term_get_children($identifier, $parent = 0, array $settings = array(), $reset = FALSE) {
-  global $language;
-  $langcode = $language->langcode;
-  if (empty($settings['language']->langcode)) {
-    $settings['language'] = $language;
-  }
-  else {
-    $langcode = $settings['language']->langcode;
-  }
+  // Use Backdrop's language handling mechanism.
+  $langcode = isset($settings['language']) && !empty($settings['language']->language)
+    ? $settings['language']->language
+    : language_default('language')->langcode;
 
   $vocabularies = array();
   $vocabulary_cache_key = NULL;
-  if (is_numeric($identifier)) {
+
+  // Check if identifier is a machine name of the vocabulary.
+  if (is_string($identifier)) {
     $vocabulary_cache_key = $identifier;
+    // Assuming taxonomy_vocabulary_load now accepts machine names directly.
     if (($vocabulary = taxonomy_vocabulary_load($identifier)) === FALSE) {
-      watchdog('Simple hierarchical select', 'Unknown vocabulary with ID !vocabulary used to get terms.', array('!vocabulary' => $identifier));
       return array();
     }
-    $vocabularies[$vocabulary->machine_name] = $identifier;
+    $vocabularies[$vocabulary->machine_name] = $vocabulary->machine_name; // Assuming machine_name is what you want to store.
   }
   elseif (is_array($identifier) && !empty($identifier['field_name'])) {
     $vocabulary_cache_key = $identifier['field_name'];
   }
-
+  // Initialize list.
   $terms = &backdrop_static(__FUNCTION__, array());
 
   if ($reset || ($vocabulary_cache_key && empty($terms[$vocabulary_cache_key][$langcode][$parent]))) {
-    // Initialize list.
     $terms[$vocabulary_cache_key][$langcode][$parent] = array();
     $cache_key = "shs:{$vocabulary_cache_key}";
-    // Get cached values.
     $cache = cache_get($cache_key);
     if ($reset || !$cache || ($cache->expire && time() > $cache->expire) || empty($cache->data[$langcode][$parent])) {
-      // Cache is empty or data has become outdated or the parent is not cached.
       if ($cache) {
-        // Cache exists and is not yet expired but $parent is missing.
         $terms[$vocabulary_cache_key] = $cache->data;
       }
       if ($reset) {
         $terms[$vocabulary_cache_key][$langcode][$parent] = array();
-      }
-
-      if (!is_numeric($vocabulary_cache_key) && is_array($identifier)) {
-        // Get list of vocabularies from field configuration.
-        $field = field_info_field($identifier['field_name']);
-        if (!empty($field['settings']['handler_settings']['target_bundles'])) {
-          foreach ($field['settings']['handler_settings']['target_bundles'] as $vocabulary_name) {
-            if (($vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name)) !== FALSE) {
-              $vocabularies[$vocabulary_name] = $vocabulary->vocabulary;
-            }
-          }
-        }
       }
 
       foreach ($vocabularies as $vocabulary) {
@@ -971,7 +953,6 @@ function shs_json_term_get_children($vocabulary, array $parent = array(), array 
       );
     }
   }
-
   return $result;
 }
 

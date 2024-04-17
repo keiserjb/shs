@@ -12,19 +12,18 @@
 
     // Default function to attach the behavior.
     attach: function (context, settings) {
-      var self = this;
       var settingsDefault = {
         display: {
           animationSpeed: 400,
         }
       };
-      $('select.shs-enabled:not([disabled])')
+      $('select.shs-enabled')
         .once('shs')
         .addClass('element-invisible')
         .hide()
         .each(function() {
-          $field = $(this);
-          var fieldName = $(this).attr('name');
+          var $field = $(this);
+          var fieldName = $field.attr('name');
           // Multiform messes up the names of the fields
           // to the format multiform[something][fieldname][...].
           if (fieldName.indexOf('multiform') == 0) {
@@ -56,6 +55,10 @@
               if ($field.hasClass('error')) {
                 // Add error-class if there was an error with the original field.
                 $select.addClass('error');
+              }
+              // Disable when the original element is disabled.
+              if ($field.prop('disabled')) {
+                $select.prop('disabled', true);
               }
               // Add label to dropdown.
               $label = shsLabelCreate($field.attr('id'), fieldSettings, level);
@@ -106,12 +109,12 @@
    * @param settings
    *   Field settings.
    * @param parent_value
-    *   Value which has been selected in the parent element (== "selected term").
-    * @param default_value
-    *   Value to use as default.
-    * @param base_id
-    *   ID of original field which is rewritten as "taxonomy_shs".
-    */
+   *   Value which has been selected in the parent element (== "selected term").
+   * @param default_value
+   *   Value to use as default.
+   * @param base_id
+   *   ID of original field which is rewritten as "taxonomy_shs".
+   */
   getTermChildren = function($element, settings, parent_value, default_value, base_id) {
     // Check if parent_value is number and convert it.
     if (!$.isArray(parent_value) && typeof parent_value != "object") {
@@ -442,6 +445,10 @@
     }
     if (settings.settings.hasOwnProperty('required') && settings.settings.required) {
       $element.addClass('required');
+    }
+    // Support Bootstrap.
+    if (Backdrop.settings.bootstrap !== undefined) {
+      $element.addClass('form-control');
     }
     // Return the new element.
     return $element;
