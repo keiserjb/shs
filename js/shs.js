@@ -12,7 +12,6 @@
 
     // Default function to attach the behavior.
     attach: function (context, settings) {
-      console.log('SHS attach function called');
       var settingsDefault = {
         display: {
           animationSpeed: 400,
@@ -23,7 +22,6 @@
         .addClass('element-invisible')
         .hide()
         .each(function() {
-          console.log('Processing shs-enabled select element');
           var $field = $(this);
           var fieldName = $field.attr('name');
           // Multiform messes up the names of the fields
@@ -118,7 +116,6 @@
    *   ID of original field which is rewritten as "taxonomy_shs".
    */
   getTermChildren = function($element, settings, parent_value, default_value, base_id) {
-    console.log('Getting term children for', parent_value);
     // Check if parent_value is number and convert it.
     if (!$.isArray(parent_value) && typeof parent_value != "object") {
       parent_value = [parent_value];
@@ -139,7 +136,6 @@
         }
       },
       success: function(data) {
-        console.log('AJAX success, data received:', data);
         if (data.success == true) {
           if ($element.prop) {
             var options = $element.prop('options');
@@ -201,7 +197,6 @@
         }
       },
       error: function(xhr, status, error) {
-        console.error('AJAX error:', error);
       }
     });
   }
@@ -307,7 +302,6 @@
    *   Current level in hierarchy.
    */
   updateElements = function($triggering_element, base_id, settings, level) {
-    console.log('Updating elements for level:', level, 'with value:', $triggering_element.val());
     // Remove all following elements.
     $triggering_element.nextAll('select').each(function() {
       if (Backdrop.settings.chosen) {
@@ -435,7 +429,6 @@
    *   The new (empty) <select> element.
    */
   shsElementCreate = function(base_id, settings, level) {
-    console.log('Creating SHS element:', base_id, settings, level);
     // Create element and initially hide it.
     $element = $('<select>')
       .attr('id', base_id + '-select-' + level)
