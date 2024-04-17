@@ -864,7 +864,7 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
   elseif (is_array($identifier) && !empty($identifier['field_name'])) {
     $vocabulary_cache_key = $identifier['field_name'];
   }
-
+  // Initialize list.
   $terms = &backdrop_static(__FUNCTION__, array());
 
   if ($reset || ($vocabulary_cache_key && empty($terms[$vocabulary_cache_key][$langcode][$parent]))) {
@@ -880,6 +880,9 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
       }
 
       foreach ($vocabularies as $vocabulary) {
+        // Get term children (only first level).
+        // Only load entities if i18n_taxonomy or entity_translation is
+        // installed.
         $load_entities = module_exists('i18n_taxonomy') || module_exists('entity_translation');
         $tree = taxonomy_get_tree($vocabulary, $parent, 1, $load_entities);
         foreach ($tree as $term) {
@@ -893,12 +896,20 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
           $terms[$vocabulary_cache_key][$langcode][$parent][$term->tid] = $term_name;
         }
       }
+      // Set cached data.
       cache_set($cache_key, $terms[$vocabulary_cache_key], 'cache', CACHE_PERMANENT);
     }
     else {
+      // Use cached data.
       $terms[$vocabulary_cache_key] = $cache->data;
     }
   }
+  // Allow other module to modify the list of terms.
+  $alter_options = array(
+    'vocabulary' => $vocabulary_cache_key,
+    'parent' => $parent,
+    'settings' => $settings,
+  );
   backdrop_alter('shs_term_get_children', $terms, $alter_options);
 
   return empty($terms[$vocabulary_cache_key][$langcode][$parent]) ? array() : $terms[$vocabulary_cache_key][$langcode][$parent];
