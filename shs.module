@@ -130,7 +130,6 @@ function shs_json_valid_token($token, array $params) {
       '%param' => 'field_name',
       '%function' => 'shs_json_valid_token',
     );
-    watchdog('shs', 'Missing mandantory token parameter "%param" in %function', $t_args, WATCHDOG_ERROR);
     return FALSE;
   }
   $token_key = 'shs-' . $params['field_name'];
@@ -166,7 +165,6 @@ function _shs_json_callback_get_arguments(array $callback, array $arguments) {
     if (is_array($validation_function)) {
       if (!isset($validation_function['callback'])) {
         $argument_valid = FALSE;
-        watchdog('shs', 'Invalid structure for shs_json validation callback %key', array('%key' => $key), WATCHDOG_ERROR);
         // Stop validation right now.
         return $result;
       }
@@ -470,7 +468,6 @@ function shs_field_widget_form(&$form, &$form_state, $field, $instance, $langcod
     // Use the updated function to load vocabularies by machine name.
     if (($vocabulary = taxonomy_vocabulary_load($vocabulary_name)) === FALSE) {
       // Vocabulary not found. Stop here and return empty array.
-      watchdog('Simple hierarchical select', 'Failed to load vocabulary with machine name !name.', array('!name' => $vocabulary_name));
       return array();
     }
     $vocabularies[] = $vocabulary;
@@ -860,7 +857,6 @@ function shs_term_get_children($identifier, $parent = 0, array $settings = array
     $vocabulary_cache_key = $identifier;
     // Assuming taxonomy_vocabulary_load now accepts machine names directly.
     if (($vocabulary = taxonomy_vocabulary_load($identifier)) === FALSE) {
-      watchdog('Simple hierarchical select', 'Unknown vocabulary with machine name !vocabulary used to get terms.', array('!vocabulary' => $identifier));
       return array();
     }
     $vocabularies[$vocabulary->machine_name] = $vocabulary->machine_name; // Assuming machine_name is what you want to store.
