@@ -1023,22 +1023,35 @@ function shs_json_term_add($token, $vocabulary, $parent, $term_name, $field = NU
   }
   $vocabulary = check_plain($vocabulary);
   if (!shs_add_term_access($vocabulary, $parent, $field)) {
-    // Sorry, but this user may not add a term to this vocabulary.
+    // User does not have permission to add terms.
     return FALSE;
   }
 
-  $term = (object) array(
-    'vocabulary' => $vocabulary,
-    'parent' => $parent,
-    'name' => str_replace('&amp;', '&', filter_xss($term_name)),
-    'language' => $language_content->langcode,
-  );
-  // Save term.
+  // Load the vocabulary object to ensure it exists.
+  $vocabulary_config = config_get('taxonomy.vocabulary.' . $vocabulary);
+  if (!$vocabulary_config) {
+    // Vocabulary does not exist.
+    return FALSE;
+  }
+
+  // Create the term object according to Backdrop's expected structure.
+  $term = new TaxonomyTerm();
+  $term->name = str_replace('&amp;', '&', filter_xss($term_name));
+  $term->vocabulary = $vocabulary;
+  $term->parent = array($parent);
+  $term->language = $language_content->langcode;
+
+  // Save the term using the appropriate Backdrop function.
   $status = taxonomy_term_save($term);
 
-  // Return term object or FALSE (in case of errors).
-  return ($status == SAVED_NEW) ? array('tid' => $term->tid, 'name' => $term->name) : FALSE;
+  if ($status == SAVED_NEW) {
+    return array('tid' => $term->tid, 'name' => $term->name);
+  } else {
+    // There was an error saving the term.
+    return FALSE;
+  }
 }
+
 
 /**
  * Implements hook_hook_taxonomy_term_insert().
