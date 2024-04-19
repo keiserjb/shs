@@ -38,15 +38,16 @@ Bugs and Feature requests should be reported in the [Issue Queue](https://github
 
 ## Current Maintainers
 
-- [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- [Laryn Kragt Bakker](https://github.com/laryn)
+- [Justin Keiser](https://github.com/keiserjb)
 - Co-maintainers desired
 
 ## Credits
 
-- Port to Backdrop (in process) by [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+- Port to Backdrop by [Laryn Kragt Bakker](https://github.com/laryn) and
+  [Justin Keiser](https://github.com/keiserjb)
 - Maintained for Drupal by [Stefan Borchert](http://drupal.org/user/36942)
 - Sponsored for Drupal by [undpaul](http://www.undpaul.de)
-
 
 ## License
 
