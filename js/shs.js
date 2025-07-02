@@ -381,7 +381,7 @@
           var term = {
             vocabulary: settings.vocabulary,
             parent: (level === 1) ? 0 : ($triggering_element.prevAll('.shs-select').val() || 0),
-            name: termName
+            term_name: termName
           };
           if (termName.length > 0) {
             termAddNew($triggering_element, $container, term, base_id, level, settings);

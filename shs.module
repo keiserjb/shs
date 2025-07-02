@@ -100,7 +100,7 @@ function shs_json_callbacks() {
         ),
         'vocabulary' => 'shs_json_validation_vocabulary_identifier',
         'parent' => 'is_string',
-        'name' => 'is_string',
+        'term_name' => 'is_string',
         'field' => 'is_string',
       ),
     ),
