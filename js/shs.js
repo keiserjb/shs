@@ -229,7 +229,7 @@
           token: settings.token,
           vocabulary: term.vocabulary,
           parent: term.parent,
-          name: term.name,
+          term_name: term.name,
           field: settings.fieldName
         }
       },
@@ -381,7 +381,7 @@
           var term = {
             vocabulary: settings.vocabulary,
             parent: (level === 1) ? 0 : ($triggering_element.prevAll('.shs-select').val() || 0),
-            term_name: termName
+            name: termName
           };
           if (termName.length > 0) {
             termAddNew($triggering_element, $container, term, base_id, level, settings);
