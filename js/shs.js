@@ -229,7 +229,7 @@
           token: settings.token,
           vocabulary: term.vocabulary,
           parent: term.parent,
-          name: term.name,
+          term_name: term.name,
           field: settings.fieldName
         }
       },
